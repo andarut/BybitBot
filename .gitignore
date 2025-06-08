@@ -1,0 +1,5 @@
+build/
+.venv/
+CMakeUserPresets.json
+.DS_Store
+cmake
