@@ -30,33 +30,69 @@ static const std::string getTimestamp() {
     return std::to_string(timestamp_ms);
 }
 
-void convert_string_numbers(nlohmann::json& j) {
-    if (j.is_object() || j.is_array()) {
-        for (auto& el : j) {
-            convert_string_numbers(el);
+f64 convert_string_numbers(nlohmann::json j) {
+    try {
+        std::string s = j.get<std::string>();
+        if (s.find_first_not_of("0123456789+-.eE") == std::string::npos) {
+            return std::stod(s);
         }
-    } else if (j.is_string()) {
-        try {
-            std::string s = j.get<std::string>();
-            // Try to convert to number
-            if (s.find_first_not_of("0123456789+-.eE") == std::string::npos) {
-                double d = std::stod(s);
-                j = d;
-            }
-        } catch (...) {
-            // Ignore if not convertible
-        }
+    } catch (...) {
+        std::cerr << j.dump(4) << " is not convertible to f32" << std::endl;
     }
+    return 0;
 }
 
-f32 getBalance() {
+f32 getBalance(const std::string& API_KEY, const std::string& API_SECRET) {
 
-    const std::string URL = "https://api2.bybit.com/fiat/otc/item/online";
+    const std::string coin = "USDT";
+
+    const std::string URL = "https://api.bybit.com/v5/asset/withdraw/withdrawable-amount?coin=" + coin;
 
     const std::string timestamp = getTimestamp();
-    const std::string recvWindow = "5000";
+    const std::string recvWindow = "50000";
+    const std::string queryString = "coin=" + coin;
 
+    const std::string API_SIGN = signRequest(API_SECRET, timestamp + API_KEY + recvWindow + queryString);
+
+    CURL* curl = curl_easy_init();
+    nlohmann::json response;
+    if (curl) {
+        std::string readBuffer;
+
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, ("X-BAPI-API-KEY: " + API_KEY).c_str());
+        headers = curl_slist_append(headers, ("X-BAPI-TIMESTAMP: " + timestamp).c_str());
+        headers = curl_slist_append(headers, ("X-BAPI-RECV-WINDOW: " + recvWindow).c_str());
+        headers = curl_slist_append(headers, ("X-BAPI-SIGN: " + API_SIGN).c_str());
+
+        curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+        } else {
+            try {
+                response = nlohmann::json::parse(readBuffer);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to parse JSON: " << e.what() << std::endl;
+                return 0;
+            }
+        }
+
+        curl_easy_cleanup(curl);
+        curl_slist_free_all(headers);
+    }
+
+    /* Response */
     
+    if (response["retCode"] == 0) {
+        return convert_string_numbers(response["result"]["withdrawableAmount"]["FUND"]["withdrawableAmount"]);
+    }
+
+    return 0;
 }
 
 std::array<f32, 10> getP2POffers() {
@@ -147,16 +183,12 @@ std::array<f32, 10> getP2POffers() {
     /* Response */
     INFO("Response = %s\n", response.dump(4).c_str());
 
-    
     if (response["ret_code"] == 0) {
         std::array<f32, 10> result;
         for (u64 i = 0; i < response["result"]["count"]; i++) {
             nlohmann::json item = response["result"]["items"][i];
             if (item["accountId"].dump(4) != "null") {
-                nlohmann::json price_json = item["price"];
-                convert_string_numbers(price_json);
-                f32 price = std::stof(price_json.dump(4));
-                result[i] = price;
+                result[i] = convert_string_numbers(item["price"]);
             }
         }
         return result;
@@ -167,28 +199,4 @@ std::array<f32, 10> getP2POffers() {
 
 void sellLink() {
     std::string URL = "https://www.bybit.com/en/fiat/trade/otc/profile/s4e7be301d77c43f09f0ccde81683ff9f/USDT/RUB/item";
-}
-
-
-int main() {
-
-    /* Load config */
-    std::ifstream config_file("config.json");
-    if (!config_file.is_open()) {
-        ERROR("config.json not found\n");
-        return 1;
-    }
-    
-    auto config = nlohmann::json::parse(config_file);
-
-    const std::string& API_KEY = config["API_KEY"];
-    const std::string& API_SECRET = config["API_SECRET"];
-    // const std::string& DEV_ID = config["DEV_ID"];
-
-    auto prices = getP2POffers();
-    for (auto& price : prices) {
-        INFO("price = %.02f\n", price);
-    }
-
-    return 0;
 }
