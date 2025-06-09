@@ -12,6 +12,8 @@ message(CMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}")
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 
+# TODO: add nlohman json
+
 # tgbot library
 
 set(Boost_USE_MULTITHREADED ON)

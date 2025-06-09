@@ -95,6 +95,7 @@ f32 getBalance(const std::string& API_KEY, const std::string& API_SECRET) {
     return 0;
 }
 
+/* TODO: return not only prices, but also details about seller */
 std::array<f32, 10> getP2POffers() {
 
     const std::string URL = "https://api2.bybit.com/fiat/otc/item/online";

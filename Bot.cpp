@@ -1,6 +1,10 @@
 #include "Bot.hpp"
 
 void BybitBot::run() {
+
+    /* TODO: add inline keyboard */
+    // https://github.com/reo7sp/tgbot-cpp/blob/master/samples/inline-keyboard/src/main.cpp
+
     m_bot.getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
         sendGreetings(message->chat->id);
     });
@@ -82,6 +86,7 @@ void BybitBot::sendBalance(const s64& chatId) {
     m_sendToUser(chatId, balanceMessage);
 }
 
+/* TODO: send including current balance */
 void BybitBot::sendP2POffers(const s64& chatId) {
     std::array<f32, 10> offers = getP2POffers();
     std::string offersMessage = std::format("Best 10 P2P offers are:\n");
