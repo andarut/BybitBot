@@ -34,6 +34,7 @@ private:
     void m_sendToAdmin(const char *message);
 
     TgBot::InlineKeyboardMarkup::Ptr m_paymentsKeyboard(const s64& chatId);
+    TgBot::InlineKeyboardMarkup::Ptr m_offersKeyboard(std::array<BybitP2POffer, 10> offers);
 
     // TODO
     // void m_sendToAll(const std::string& message);

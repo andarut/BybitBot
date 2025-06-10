@@ -2,6 +2,7 @@
 
 BybitBot::BybitBot(const std::string &apiKey) : m_bot(apiKey) {
     /* Setup keyboard */
+    // TODO: replace with inline keyboard
     m_keyboard = TgBot::ReplyKeyboardMarkup::Ptr(new TgBot::ReplyKeyboardMarkup);
     for (auto& command : m_commands) {
         std::vector<TgBot::KeyboardButton::Ptr> row;
@@ -155,6 +156,23 @@ TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_paymentsKeyboard(const s64& chatId)
     return keyboard;
 }
 
+TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_offersKeyboard(std::array<BybitP2POffer, 10> offers) {
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);    
+
+    for (auto& offer : offers) {
+        INFO("offer link = %s\n", offer.link.c_str());
+        std::vector<TgBot::InlineKeyboardButton::Ptr> row;
+        TgBot::InlineKeyboardButton::Ptr offerButton(new TgBot::InlineKeyboardButton);
+        offerButton->text = std::format("Price: {:.2f} | Rate: {:2d} | Offers:{:4d}", offer.price, offer.recentExecuteRate, offer.recentOrderNum);
+        offerButton->url = offer.link;
+        offerButton->callbackData = offer.price;
+        row.push_back(offerButton);
+        keyboard->inlineKeyboard.push_back(row);
+    }
+
+    return keyboard;
+}
+
 void BybitBot::sendPaymentsSetup(const s64& chatId) {
     const std::string paymentsMessage = "Select your payments methods:\n";
     m_state[chatId] = BybitBotUserState::PAYMENTS_INPUT;
@@ -163,12 +181,8 @@ void BybitBot::sendPaymentsSetup(const s64& chatId) {
 
 /* TODO: send including current balance */
 void BybitBot::sendP2POffers(const s64& chatId) {
-    std::array<f32, 10> offers = getP2POffers();
-    std::string offersMessage = std::format("Best 10 P2P offers are:\n");
-    for (u64 i = 0; i < 10; i++) {
-        offersMessage += std::format("{:2d}. {:.2f}\n", i+1, offers[i]);
-    }
-    m_sendToUser(chatId, offersMessage);
+    auto offers = getP2POffers();
+    m_sendToUser(chatId, "Top 10 offers:\n", m_offersKeyboard(offers));
 }
 
 void BybitBot::sendApiKeySetup(const s64& chatId) {

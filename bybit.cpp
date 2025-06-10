@@ -87,7 +87,6 @@ f32 getBalance(const std::string& API_KEY, const std::string& API_SECRET) {
     }
 
     /* Response */
-    
     if (response["retCode"] == 0) {
         return convert_string_numbers(response["result"]["withdrawableAmount"]["FUND"]["withdrawableAmount"]);
     }
@@ -95,8 +94,7 @@ f32 getBalance(const std::string& API_KEY, const std::string& API_SECRET) {
     return 0;
 }
 
-/* TODO: return not only prices, but also details about seller */
-std::array<f32, 10> getP2POffers() {
+std::array<BybitP2POffer, 10> getP2POffers() {
 
     const std::string URL = "https://api2.bybit.com/fiat/otc/item/online";
 
@@ -167,7 +165,6 @@ std::array<f32, 10> getP2POffers() {
             std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
         } else {
             try {
-                std::cout << "responseString = " << responseString << std::endl;
                 response = nlohmann::json::parse(responseString);
             } catch (const std::exception& e) {
                 std::cerr << "Failed to parse response as JSON: " << e.what() << std::endl;
@@ -182,22 +179,23 @@ std::array<f32, 10> getP2POffers() {
     curl_global_cleanup();
 
     /* Response */
-    INFO("Response = %s\n", response.dump(4).c_str());
+    // INFO("Response = %s\n", response.dump(4).c_str());
 
     if (response["ret_code"] == 0) {
-        std::array<f32, 10> result;
+        std::array<BybitP2POffer, 10> result;
         for (u64 i = 0; i < response["result"]["count"]; i++) {
             nlohmann::json item = response["result"]["items"][i];
             if (item["accountId"].dump(4) != "null") {
-                result[i] = convert_string_numbers(item["price"]);
+                result[i].price = convert_string_numbers(item["price"]);
+                result[i].nickName = item["nickName"].get<std::string>();
+                result[i].recentExecuteRate = item["recentExecuteRate"].get<u64>();
+                result[i].recentOrderNum = item["recentOrderNum"].get<u64>();
+                result[i].remark = item["remark"].get<std::string>();
+                result[i].link = std::format("https://www.bybit.com/en/fiat/trade/otc/profile/{}/USDT/RUB/item", item["userMaskId"].get<std::string>());
             }
         }
         return result;
     }
 
     return {};
-}
-
-void sellLink() {
-    std::string URL = "https://www.bybit.com/en/fiat/trade/otc/profile/s4e7be301d77c43f09f0ccde81683ff9f/USDT/RUB/item";
 }
