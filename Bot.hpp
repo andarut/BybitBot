@@ -11,7 +11,7 @@
 
 class BybitBot {
 public:
-    BybitBot(const std::string &apiKey) : m_bot(apiKey) {};
+    BybitBot(const std::string &apiKey);
     void run();
 
     void setAdmin(const s64 devId) { m_devId = devId; }
@@ -23,25 +23,28 @@ public:
 
     void sendApiKeySetup(const s64& chatId);
     void sendApiSecretSetup(const s64& chatId);
+    void sendPaymentsSetup(const s64& chatId);
 
     void sendUnknownCommand(const s64& chatId);
 private:
-    void m_sendToUser(const s64& chatId, const std::string& message);
-    void m_sendToUser(const s64& chatId, const char *message);
+    void m_sendToUser(const s64& chatId, const std::string& message, const TgBot::InlineKeyboardMarkup::Ptr& keyboard=nullptr);
+    void m_sendToUser(const s64& chatId, const char *message, const TgBot::InlineKeyboardMarkup::Ptr& keyboard=nullptr);
 
     void m_sendToAdmin(const std::string& message);
     void m_sendToAdmin(const char *message);
 
+    TgBot::InlineKeyboardMarkup::Ptr m_paymentsKeyboard(const s64& chatId);
+
     // TODO
     // void m_sendToAll(const std::string& message);
 
-    s64 m_devId;
-    TgBot::Bot m_bot;
+    s64 m_devId = -1;
 
     /* DATA */
     struct BybitBotUserData {
         std::string apiKey;
         std::string apiSecret;
+        std::list<u64> paymentMethods; // indexes
     };
     std::unordered_map<s64, BybitBotUserData> m_data;
 
@@ -52,7 +55,8 @@ private:
     enum BybitBotUserState {
         IDLE,
         API_KEY_INPUT,
-        API_SECRET_INPUT
+        API_SECRET_INPUT,
+        PAYMENTS_INPUT
     };
     std::unordered_map<s64, BybitBotUserState> m_state;
 
@@ -60,24 +64,34 @@ private:
     void m_loadState();
 
     const std::list<std::string> m_commands = {
-        /* User commands */
-        "/start",
-        "/help",
         "/balance",
         "/offers",
+        "/payments",
         "/key",
         "/secret",
-        /* Admin commands */
+        "/help",
+        "/start",
+    };
+
+    const std::list<std::string> m_admin_commands = {
         "/save",
     };
 
-    const bool isMessageACommand(const std::string& message) {
+    const bool m_isMessageACommand(const std::string& message) {
         for (auto& command : m_commands) {
+            if (StringTools::startsWith(message, command))
+                return true;
+        }
+        for (auto& command : m_admin_commands) {
             if (StringTools::startsWith(message, command))
                 return true;
         }
         return false;
     }
+
+    /* tgbot objects */
+    TgBot::Bot m_bot;
+    TgBot::ReplyKeyboardMarkup::Ptr m_keyboard;
 };
 
 #endif // BOT_H
