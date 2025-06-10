@@ -16,7 +16,6 @@ BybitBot::BybitBot(const std::string &apiKey) : m_bot(apiKey) {
 void BybitBot::run() {
 
     m_bot.getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
-        INFO("id = %d\n", message->chat->id);
         sendGreetings(message->chat->id);
     });
 
@@ -73,7 +72,6 @@ void BybitBot::run() {
 
     m_bot.getEvents().onCallbackQuery([this](TgBot::CallbackQuery::Ptr query) {
         if (m_state[query->message->chat->id] == BybitBotUserState::PAYMENTS_INPUT) {
-            INFO("QUERY DATA = %s\n", query->data.c_str());
             u64 data = stoi(query->data);
             if (data == -1) {
                 // Done
@@ -160,10 +158,9 @@ TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_offersKeyboard(std::array<BybitP2PO
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);    
 
     for (auto& offer : offers) {
-        INFO("offer link = %s\n", offer.link.c_str());
         std::vector<TgBot::InlineKeyboardButton::Ptr> row;
         TgBot::InlineKeyboardButton::Ptr offerButton(new TgBot::InlineKeyboardButton);
-        offerButton->text = std::format("Price: {:.2f} | Rate: {:2d} | Offers:{:4d}", offer.price, offer.recentExecuteRate, offer.recentOrderNum);
+        offerButton->text = std::format("Price: {:.2f} | Rate: {:2d}% | Offers: {:4d}", offer.price, offer.recentExecuteRate, offer.recentOrderNum);
         offerButton->url = offer.link;
         offerButton->callbackData = offer.price;
         row.push_back(offerButton);
