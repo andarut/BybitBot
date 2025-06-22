@@ -10,9 +10,9 @@ for simplified P2P trading on Bybit
 <h3>
 </h3>
 
-[![macos-x64](https://github.com/andarut/ByBitBot/actions/workflows/macos_x64.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/liblena/actions/workflows/macos_x64.yml)
-[![macos-arm](https://github.com/andarut/ByBitBot/actions/workflows/macos_arm.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/liblena/actions/workflows/macos_arm.yml)
-[![linux-x64](https://github.com/andarut/ByBitBot/actions/workflows/linux_x64.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/liblena/actions/workflows/linux_x64.yml)
+[![macos-x64](https://github.com/andarut/ByBitBot/actions/workflows/macos_x64.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/ByBitBot/actions/workflows/macos_x64.yml)
+[![macos-arm](https://github.com/andarut/ByBitBot/actions/workflows/macos_arm.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/ByBitBot/actions/workflows/macos_arm.yml)
+[![linux-x64](https://github.com/andarut/ByBitBot/actions/workflows/linux_x64.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/ByBitBot/actions/workflows/linux_x64.yml)
 
 </div>
 
