@@ -1,4 +1,26 @@
-# BybitBot
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="/docs/bybit_logo_light.svg">
+  <img alt="liblena logo" src="/docs/bybitbot_logo_dark.svg" width="50%" height="50%">
+</picture>
+
+for simplified P2P trading on Bybit 
+
+<h3>
+</h3>
+
+[![macos-x64](https://github.com/andarut/ByBitBot/actions/workflows/macos_x64.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/liblena/actions/workflows/macos_x64.yml)
+[![macos-arm](https://github.com/andarut/ByBitBot/actions/workflows/macos_arm.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/liblena/actions/workflows/macos_arm.yml)
+[![linux-x64](https://github.com/andarut/ByBitBot/actions/workflows/linux_x64.yml/badge.svg?branch=main&event=push)](https://github.com/andarut/liblena/actions/workflows/linux_x64.yml)
+
+</div>
+
+---
+
+This Telegram bot can make your P2P trading life on Bybit easier.
+
+Due to its extreme simplicity, it aims to be the perfect tool for P2P trader.
 
 ## Requirements
 
