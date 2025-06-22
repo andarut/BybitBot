@@ -1,0 +1,46 @@
+name: macos-arm
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  macos-arm64:
+    runs-on: macos-15
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install LLVM
+        run: |
+          brew install llvm@19
+          brew link --force llvm@19
+          echo 'export PATH="/opt/homebrew/opt/llvm@19/bin:$PATH"' >> /Users/runner/.bash_profile
+          source /Users/runner/.bash_profile
+      - name: Check installed clang
+        run: |
+          which clang++ && clang++ -v
+          /opt/homebrew/opt/llvm@19/bin/clang++ -v
+      - name: Prepare
+        run: |
+          source $GITHUB_WORKSPACE/scripts/prepare_macos_arm.sh
+          echo PATH=${GITHUB_WORKSPACE}/.venv/bin:$PATH >> $GITHUB_ENV
+      - name: Check virtual environment
+        run: |
+          which clang++ && clang++ -v
+          which /opt/homebrew/opt/llvm@19/bin/clang++ && /opt/homebrew/opt/llvm@19/bin/clang++ -v
+          which python3 && python3 -V
+          which conan && conan -v
+          which cmake && cmake --version
+      - name: Configure
+        run: |
+          cmake --preset 'conan-debug'
+      - name: Build
+        run: |
+          make -j$(sysctl -n hw.ncpu) -C $GITHUB_WORKSPACE/build/Debug/
+      - name: Run tests
+        run: |
+          make -j$(sysctl -n hw.ncpu) test -C $GITHUB_WORKSPACE/build/Debug/
