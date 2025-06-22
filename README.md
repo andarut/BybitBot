@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="/docs/bybit_logo_light.svg">
-  <img alt="liblena logo" src="/docs/bybitbot_logo_dark.svg" width="50%" height="50%">
+  <source media="(prefers-color-scheme: light)" srcset="/docs/bybitbot_logo_dark.png">
+  <img alt="liblena logo" src="/docs/bybitbot_logo_dark.png" width="50%" height="50%">
 </picture>
 
 for simplified P2P trading on Bybit 
