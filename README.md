@@ -1,4 +1,4 @@
-# ByBitBot
+# BybitBot
 
 ## Requirements
 
