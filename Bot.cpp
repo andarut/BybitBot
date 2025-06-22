@@ -35,81 +35,64 @@ void BybitBot::run() {
     });
 
     m_bot.getEvents().onCallbackQuery([this](TgBot::CallbackQuery::Ptr query) {
-        // if (m_state[query->message->chat->id] == BybitBotUserState::PAYMENTS_INPUT) {
-        //     u64 data = stoi(query->data);
-        //     if (data == -1) {
-        //         // Done
-        //         m_state[query->message->chat->id] = BybitBotUserState::IDLE;
-        //         m_bot.getApi().editMessageText("Payment methods are set",
-        //             query->message->chat->id,
-        //             query->message->messageId,
-        //             query->inlineMessageId
-        //         );
-        //     } else {
-        //         if (std::find(m_data[query->message->chat->id].paymentMethods.begin(), m_data[query->message->chat->id].paymentMethods.end(), data) != m_data[query->message->chat->id].paymentMethods.end())
-        //             m_data[query->message->chat->id].paymentMethods.remove(data);
-        //         else
-        //             m_data[query->message->chat->id].paymentMethods.push_back(data);
-        //         m_bot.getApi().editMessageReplyMarkup(
-        //             query->message->chat->id,
-        //             query->message->messageId,
-        //             query->inlineMessageId,
-        //             m_paymentsKeyboard(query->message->chat->id)
-        //         );
-        //     }
+        if (m_state[query->message->chat->id] == BybitBotUserState::PAYMENTS_INPUT) {
+            u64 data = stoi(query->data);
+            if (data == -1) {
+                // Done
+                m_state[query->message->chat->id] = BybitBotUserState::IDLE;
+                m_deleteMessage(query->message->chat->id, query->message->messageId);
+                m_sendToUser(query->message->chat->id, "Payment methods are set");
+            } else {
+                if (std::find(m_data[query->message->chat->id].paymentMethods.begin(), m_data[query->message->chat->id].paymentMethods.end(), data) != m_data[query->message->chat->id].paymentMethods.end())
+                    m_data[query->message->chat->id].paymentMethods.remove(data);
+                else
+                    m_data[query->message->chat->id].paymentMethods.push_back(data);
+                m_bot.getApi().editMessageReplyMarkup(
+                    query->message->chat->id,
+                    query->message->messageId,
+                    query->inlineMessageId,
+                    m_paymentsKeyboard(query->message->chat->id)
+                );
+            }
+        }
+
+    
+        std::string data = query->data;
+        if (data == "Balance") {
+            m_deleteMessage(query->message->chat->id, query->message->messageId);
+            sendBalance(query->message->chat->id);   
+        }
+        if (data == "P2P Offers") {
+            m_deleteMessage(query->message->chat->id, query->message->messageId);
+            sendP2POffers(query->message->chat->id);
+        }
+        // if (data == "Tickers") {
+        //     m_deleteMessage(query->message->chat->id, query->message->messageId);
+        //     sendTickers(query->message->chat->id);
         // }
-
-        if (m_state[query->message->chat->id] == BybitBotUserState::IDLE) {
-            std::string data = query->data;
-            if (data == "Balance") {
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                sendBalance(query->message->chat->id);   
-            }
-            if (data == "Tickers") {
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                sendTickers(query->message->chat->id);
-            }
-            if (data == "API_KEY setup") {
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                sendApiKeySetup(query->message->chat->id);
-            }
-            if (data == "API_SECRET setup") {
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                sendApiSecretSetup(query->message->chat->id);
-            }
-            if (data == "Tokens setup") {
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                sendTokensSetup(query->message->chat->id);
-            }
-            if (data == "Currencies setup") {
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                sendCurrenciesSetup(query->message->chat->id);
-            }
-            if (data == "Help") {
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                sendHelp(query->message->chat->id);
-            }
-
-            // Done
-                // m_state[query->message->chat->id] = BybitBotUserState::IDLE;
-                // m_bot.getApi().editMessageText("Tokens are set",
-                //     query->message->chat->id,
-                //     query->message->messageId,
-                //     query->inlineMessageId
-                // );
-            
-            // else {
-            //     if (std::find(m_data[query->message->chat->id].tokens.begin(), m_data[query->message->chat->id].tokens.end(), data) != m_data[query->message->chat->id].tokens.end())
-            //         m_data[query->message->chat->id].tokens.remove(data);
-            //     else
-            //         m_data[query->message->chat->id].tokens.push_back(data);
-            //     m_bot.getApi().editMessageReplyMarkup(
-            //         query->message->chat->id,
-            //         query->message->messageId,
-            //         query->inlineMessageId,
-            //         m_tokensKeyboard(query->message->chat->id)
-            //     );
-            // }
+        if (data == "API_KEY setup") {
+            m_deleteMessage(query->message->chat->id, query->message->messageId);
+            sendApiKeySetup(query->message->chat->id);
+        }
+        if (data == "API_SECRET setup") {
+            m_deleteMessage(query->message->chat->id, query->message->messageId);
+            sendApiSecretSetup(query->message->chat->id);
+        }
+        // if (data == "Tokens setup") {
+        //     m_deleteMessage(query->message->chat->id, query->message->messageId);
+        //     sendTokensSetup(query->message->chat->id);
+        // }
+        // if (data == "Currencies setup") {
+        //     m_deleteMessage(query->message->chat->id, query->message->messageId);
+        //     sendCurrenciesSetup(query->message->chat->id);
+        // }
+        if (data == "Payment methods setup") {
+            m_deleteMessage(query->message->chat->id, query->message->messageId);
+            sendPaymentsSetup(query->message->chat->id);
+        }
+        if (data == "Help") {
+            m_deleteMessage(query->message->chat->id, query->message->messageId);
+            sendHelp(query->message->chat->id);
         }
 
         if (std::find(m_menu.begin(), m_menu.end(), query->data) != m_menu.end()) return;
@@ -167,6 +150,9 @@ void BybitBot::run() {
             longPoll.start();
         }
     } catch (TgBot::TgException& e) {
+        m_saveState();
+        m_saveData();
+        // m_sendAll("Bot is offline");
         ERROR("error: %s\n", e.what());
     }
 }
@@ -187,59 +173,60 @@ void BybitBot::sendBalance(const s64& chatId) {
     m_sendToUser(chatId, balanceMessage);
 }
 
-// TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_paymentsKeyboard(const s64& chatId) {
-//     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
+TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_paymentsKeyboard(const s64& chatId) {
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
 
-//     std::vector<TgBot::InlineKeyboardButton::Ptr> row0;
+    std::vector<TgBot::InlineKeyboardButton::Ptr> row0;
 
-//     for (auto& paymentMethod : supportedPaymentMethods) {
-//         TgBot::InlineKeyboardButton::Ptr paymentMethodButton(new TgBot::InlineKeyboardButton);
-//         if (std::find(m_data[chatId].paymentMethods.begin(), m_data[chatId].paymentMethods.end(), paymentMethod.index) != m_data[chatId].paymentMethods.end())
-//             paymentMethodButton->text = std::format("✅ {}", paymentMethod.text);
-//         else
-//             paymentMethodButton->text = std::format("❌ {}", paymentMethod.text);
-//         paymentMethodButton->callbackData = std::to_string(paymentMethod.index);
-//         row0.push_back(paymentMethodButton);
-//     }
+    for (auto& paymentMethod : supportedPaymentMethods) {
+        TgBot::InlineKeyboardButton::Ptr paymentMethodButton(new TgBot::InlineKeyboardButton);
+        if (std::find(m_data[chatId].paymentMethods.begin(), m_data[chatId].paymentMethods.end(), paymentMethod.index) != m_data[chatId].paymentMethods.end())
+            paymentMethodButton->text = std::format("✅ {}", paymentMethod.text);
+        else
+            paymentMethodButton->text = std::format("❌ {}", paymentMethod.text);
+        paymentMethodButton->callbackData = std::to_string(paymentMethod.index);
+        row0.push_back(paymentMethodButton);
+    }
 
-//     std::vector<TgBot::InlineKeyboardButton::Ptr> done_row;
-//     TgBot::InlineKeyboardButton::Ptr doneButton(new TgBot::InlineKeyboardButton);
-//     doneButton->text = "Done!";
-//     doneButton->callbackData = std::to_string(-1);
-//     done_row.push_back(doneButton);
+    std::vector<TgBot::InlineKeyboardButton::Ptr> done_row;
+    TgBot::InlineKeyboardButton::Ptr doneButton(new TgBot::InlineKeyboardButton);
+    doneButton->text = "Done!";
+    doneButton->callbackData = std::to_string(-1);
+    done_row.push_back(doneButton);
 
-//     keyboard->inlineKeyboard.push_back(row0);
-//     keyboard->inlineKeyboard.push_back(done_row);
+    keyboard->inlineKeyboard.push_back(row0);
+    keyboard->inlineKeyboard.push_back(done_row);
 
-//     return keyboard;
-// }
+    return keyboard;
+}
 
-// TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_offersKeyboard(std::array<BybitP2POffer, 10> offers) {
-//     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);    
+TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_offersKeyboard(std::array<BybitP2POffer, 10> offers) {
+    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);    
 
-//     for (auto& offer : offers) {
-//         std::vector<TgBot::InlineKeyboardButton::Ptr> row;
-//         TgBot::InlineKeyboardButton::Ptr offerButton(new TgBot::InlineKeyboardButton);
-//         offerButton->text = std::format("Price: {:.2f} | Rate: {:2d}% | Offers: {:4d}", offer.price, offer.recentExecuteRate, offer.recentOrderNum);
-//         offerButton->url = offer.link;
-//         offerButton->callbackData = offer.price;
-//         row.push_back(offerButton);
-//         keyboard->inlineKeyboard.push_back(row);
-//     }
+    for (auto& offer : offers) {
+        std::vector<TgBot::InlineKeyboardButton::Ptr> row;
+        TgBot::InlineKeyboardButton::Ptr offerButton(new TgBot::InlineKeyboardButton);
+        offerButton->text = std::format("Price: {:.2f} | Rate: {:2d}% | Offers: {:4d}", offer.price, offer.recentExecuteRate, offer.recentOrderNum);
+        offerButton->url = offer.link;
+        offerButton->callbackData = offer.price;
+        row.push_back(offerButton);
+        keyboard->inlineKeyboard.push_back(row);
+    }
 
-//     return keyboard;
-// }
+    return keyboard;
+}
 
-// void BybitBot::sendPaymentsSetup(const s64& chatId) {
-//     const std::string paymentsMessage = "Select your payments methods:\n";
-//     m_state[chatId] = BybitBotUserState::PAYMENTS_INPUT;
-//     m_sendToUser(chatId, paymentsMessage, m_paymentsKeyboard(chatId));
-// }
+void BybitBot::sendPaymentsSetup(const s64& chatId) {
+    const std::string paymentsMessage = "Select your payments methods:\n";
+    m_state[chatId] = BybitBotUserState::PAYMENTS_INPUT;
+    m_sendToUser(chatId, paymentsMessage, m_paymentsKeyboard(chatId));
+}
 
-// void BybitBot::sendP2POffers(const s64& chatId) {
-//     auto offers = getP2POffers("USDT", "RUB", 20000);
-//     m_sendToUser(chatId, "Top 10 offers:\n", m_offersKeyboard(offers));
-// }
+void BybitBot::sendP2POffers(const s64& chatId) {
+    auto offers = getP2POffers("USDT", "RUB", 20000);
+    m_sendToUser(chatId, "Top 10 offers:\n", m_offersKeyboard(offers));
+    m_sendToUser(chatId, "Menu");
+}
 
 TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_menuKeyboard(const s64& chatId) {
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
@@ -392,7 +379,13 @@ void BybitBot::m_sendToAdmin(const char *message) {
 }
 
 void BybitBot::m_deleteMessage(const s64& chatId, const s64& messageId) {
-    m_bot.getApi().deleteMessage(chatId, messageId);
+    try {
+        m_bot.getApi().deleteMessage(chatId, messageId);
+    } catch (TgBot::TgException& e) {
+        if (e.errorCode == TgBot::TgException::ErrorCode::BadRequest) {
+            return;
+        }
+    }
 }
 
 void BybitBot::m_saveData() {
@@ -401,6 +394,7 @@ void BybitBot::m_saveData() {
         j[std::to_string(id)] = nlohmann::json{
             {"apiKey", userData.apiKey},
             {"apiSecret", userData.apiSecret},
+            {"paymentMethods", userData.paymentMethods},
             {"tokens", userData.tokens},
             {"currencies", userData.currencies}
         };
@@ -425,6 +419,7 @@ void BybitBot::m_loadData() {
         m_data[id] = BybitBotUserData({
             value["apiKey"].get<std::string>(),
             value["apiSecret"].get<std::string>(),
+            value["paymentMethods"].get<std::list<u64>>(),
             value["tokens"].get<std::list<std::string>>(),
             value["currencies"].get<std::list<std::string>>()
         });

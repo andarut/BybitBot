@@ -9,6 +9,7 @@
 
 #include <tgbot/tgbot.h>
 
+/* TOneverDO: Make parent TgBot class */
 class BybitBot {
 public:
     BybitBot(const std::string &apiKey);
@@ -19,7 +20,7 @@ public:
     void sendGreetings(const s64& chatId);
     void sendHelp(const s64& chatId);
     void sendBalance(const s64& chatId);
-    // void sendP2POffers(const s64& chatId);
+    void sendP2POffers(const s64& chatId);
     void sendTickers(const s64& chatId);
 
     void sendApiKeySetup(const s64& chatId);
@@ -28,7 +29,7 @@ public:
     void sendTokensSetup(const s64& chatId);
     void sendCurrenciesSetup(const s64& chatId);
 
-    // void sendPaymentsSetup(const s64& chatId);
+    void sendPaymentsSetup(const s64& chatId);
 
     void sendUnknownCommand(const s64& chatId);
 private:
@@ -40,8 +41,8 @@ private:
 
     void m_deleteMessage(const s64& chatId, const s64& messageId);
 
-    // TgBot::InlineKeyboardMarkup::Ptr m_paymentsKeyboard(const s64& chatId);
-    // TgBot::InlineKeyboardMarkup::Ptr m_offersKeyboard(std::array<BybitP2POffer, 10> offers);
+    TgBot::InlineKeyboardMarkup::Ptr m_paymentsKeyboard(const s64& chatId);
+    TgBot::InlineKeyboardMarkup::Ptr m_offersKeyboard(std::array<BybitP2POffer, 10> offers);
 
     TgBot::InlineKeyboardMarkup::Ptr m_menuKeyboard(const s64& chatId);
 
@@ -57,7 +58,7 @@ private:
     struct BybitBotUserData {
         std::string apiKey;
         std::string apiSecret;
-        // std::list<u64> paymentMethods; // indexes
+        std::list<u64> paymentMethods;
         std::list<std::string> tokens;
         std::list<std::string> currencies;
     };
@@ -71,7 +72,7 @@ private:
         IDLE,
         API_KEY_INPUT,
         API_SECRET_INPUT,
-        // PAYMENTS_INPUT
+        PAYMENTS_INPUT,
         TOKENS_INPUT,
         CURRENCIES_INPUT
     };
@@ -80,13 +81,16 @@ private:
     void m_saveState();
     void m_loadState();
 
+    // TODO: make in map <command> : <handler>
     const std::list<std::string> m_menu = {
         "Balance",
-        "Tickers",
+        "P2P Offers",
+        // "Tickers",
         "API_KEY setup",
         "API_SECRET setup",
-        "Tokens setup",
-        "Currencies setup",
+        // "Tokens setup",
+        // "Currencies setup",
+        "Payment methods setup",
         "Help"
     };
 
