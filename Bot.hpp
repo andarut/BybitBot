@@ -20,9 +20,10 @@ public:
     void sendGreetings(const s64& chatId);
     void sendHelp(const s64& chatId);
     void sendBalance(const s64& chatId);
-    void sendP2POffers(const s64& chatId);
+    void sendP2POffers(const s64& chatId, const u64& amount);
     void sendTickers(const s64& chatId);
 
+    void sendAmountSetup(const s64& chatId);
     void sendApiKeySetup(const s64& chatId);
     void sendApiSecretSetup(const s64& chatId);
 
@@ -56,8 +57,9 @@ private:
 
     /* DATA */
     struct BybitBotUserData {
-        std::string apiKey;
-        std::string apiSecret;
+        /* default read-only API keys from test net for demo*/
+        std::string apiKey="JwmWRC3AeLxMQ5HHN1";
+        std::string apiSecret="JcKWltDJjjjf5c4SSLg8ZguAHJyG3FJ7niH4";
         std::list<u64> paymentMethods;
         std::list<std::string> tokens;
         std::list<std::string> currencies;
@@ -73,6 +75,7 @@ private:
         API_KEY_INPUT,
         API_SECRET_INPUT,
         PAYMENTS_INPUT,
+        AMOUNT_INPUT,
         TOKENS_INPUT,
         CURRENCIES_INPUT
     };

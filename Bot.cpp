@@ -21,14 +21,27 @@ void BybitBot::run() {
 
     m_bot.getEvents().onAnyMessage([this](TgBot::Message::Ptr message) {
         if (m_state[message->chat->id] != BybitBotUserState::IDLE) {
+            if (m_state[message->chat->id] == BybitBotUserState::AMOUNT_INPUT) {
+                std::string amount = message->text;
+                std::regex unsignedNumberRegex("\\b\\d+\\b");
+                m_state[message->chat->id] = BybitBotUserState::IDLE;
+                m_deleteMessage(message->chat->id, message->messageId);
+                if (std::regex_search(amount, unsignedNumberRegex)) {
+                    sendP2POffers(message->chat->id, stoi(amount));
+                } else {
+                    m_sendToUser(message->chat->id, "Amount should be unsigned number\n");
+                }
+            }
             if (m_state[message->chat->id] == BybitBotUserState::API_KEY_INPUT) {
                 m_data[message->chat->id].apiKey = message->text;
                 m_state[message->chat->id] = BybitBotUserState::IDLE;
+                m_deleteMessage(message->chat->id, message->messageId);
                 m_sendToUser(message->chat->id, "API_KEY set\n");
             }
             if (m_state[message->chat->id] == BybitBotUserState::API_SECRET_INPUT) {
                 m_data[message->chat->id].apiSecret = message->text;
                 m_state[message->chat->id] = BybitBotUserState::IDLE;
+                m_deleteMessage(message->chat->id, message->messageId);
                 m_sendToUser(message->chat->id, "API_SECRET set\n");
             }
         }
@@ -64,7 +77,7 @@ void BybitBot::run() {
         }
         if (data == "P2P Offers") {
             m_deleteMessage(query->message->chat->id, query->message->messageId);
-            sendP2POffers(query->message->chat->id);
+            sendAmountSetup(query->message->chat->id);
         }
         // if (data == "Tickers") {
         //     m_deleteMessage(query->message->chat->id, query->message->messageId);
@@ -176,16 +189,16 @@ void BybitBot::sendBalance(const s64& chatId) {
 TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_paymentsKeyboard(const s64& chatId) {
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
 
-    std::vector<TgBot::InlineKeyboardButton::Ptr> row0;
-
     for (auto& paymentMethod : supportedPaymentMethods) {
+        std::vector<TgBot::InlineKeyboardButton::Ptr> row;
         TgBot::InlineKeyboardButton::Ptr paymentMethodButton(new TgBot::InlineKeyboardButton);
         if (std::find(m_data[chatId].paymentMethods.begin(), m_data[chatId].paymentMethods.end(), paymentMethod.index) != m_data[chatId].paymentMethods.end())
             paymentMethodButton->text = std::format("✅ {}", paymentMethod.text);
         else
             paymentMethodButton->text = std::format("❌ {}", paymentMethod.text);
         paymentMethodButton->callbackData = std::to_string(paymentMethod.index);
-        row0.push_back(paymentMethodButton);
+        row.push_back(paymentMethodButton);
+        keyboard->inlineKeyboard.push_back(row);
     }
 
     std::vector<TgBot::InlineKeyboardButton::Ptr> done_row;
@@ -194,7 +207,6 @@ TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_paymentsKeyboard(const s64& chatId)
     doneButton->callbackData = std::to_string(-1);
     done_row.push_back(doneButton);
 
-    keyboard->inlineKeyboard.push_back(row0);
     keyboard->inlineKeyboard.push_back(done_row);
 
     return keyboard;
@@ -222,8 +234,8 @@ void BybitBot::sendPaymentsSetup(const s64& chatId) {
     m_sendToUser(chatId, paymentsMessage, m_paymentsKeyboard(chatId));
 }
 
-void BybitBot::sendP2POffers(const s64& chatId) {
-    auto offers = getP2POffers("USDT", "RUB", 20000);
+void BybitBot::sendP2POffers(const s64& chatId, const u64& amount) {
+    auto offers = getP2POffers("USDT", "RUB", amount, m_data[chatId].paymentMethods);
     m_sendToUser(chatId, "Top 10 offers:\n", m_offersKeyboard(offers));
     m_sendToUser(chatId, "Menu");
 }
@@ -319,6 +331,12 @@ void BybitBot::sendTickers(const s64& chatId) {
     }
 
     m_sendToUser(chatId, tickers_message);
+}
+
+void BybitBot::sendAmountSetup(const s64& chatId) {
+    const std::string amountSetup = "Send your amount\n";
+    m_state[chatId] = BybitBotUserState::AMOUNT_INPUT;
+    m_sendToUser(chatId, amountSetup);
 }
 
 void BybitBot::sendApiKeySetup(const s64& chatId) {

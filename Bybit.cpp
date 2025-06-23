@@ -44,12 +44,15 @@ f64 convert_string_numbers(nlohmann::json j) {
 
 f32 getBalance(const std::string& coin, const std::string& API_KEY, const std::string& API_SECRET) {
 
-    const std::string URL = "https://api.bybit.com/v5/asset/withdraw/withdrawable-amount?coin=" + coin;
+    // const std::string URL = "https://api.bybit.com/v5/asset/withdraw/withdrawable-amount?coin=" + coin;
+
+    const std::string queryString = "accountType=UNIFIED&coin=" + coin;
+
+    const std::string URL = "https://api-testnet.bybit.com/v5/asset/transfer/query-account-coins-balance?" + queryString;
 
     const std::string timestamp = getTimestamp();
     const std::string recvWindow = "50000";
-    const std::string queryString = "coin=" + coin;
-
+    
     const std::string API_SIGN = signRequest(API_SECRET, timestamp + API_KEY + recvWindow + queryString);
 
     CURL* curl = curl_easy_init();
@@ -73,6 +76,7 @@ f32 getBalance(const std::string& coin, const std::string& API_KEY, const std::s
             std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
         } else {
             try {
+                INFO("readBuffer = %s\n", readBuffer.c_str());
                 response = nlohmann::json::parse(readBuffer);
             } catch (const std::exception& e) {
                 std::cerr << "Failed to parse JSON: " << e.what() << std::endl;
@@ -86,7 +90,7 @@ f32 getBalance(const std::string& coin, const std::string& API_KEY, const std::s
 
     /* Response */
     if (response["retCode"] == 0) {
-        return convert_string_numbers(response["result"]["withdrawableAmount"]["FUND"]["withdrawableAmount"]);
+        return convert_string_numbers(response["result"]["balance"][0]["walletBalance"]);
     }
 
     return 0;
@@ -232,7 +236,7 @@ const std::list<std::string> getCoinList(const std::string& API_KEY, const std::
 }
 
 /* TODO: add test */
-std::array<BybitP2POffer, 10> getP2POffers(const std::string token, const std::string currency, const u64 amount) {
+std::array<BybitP2POffer, 10> getP2POffers(const std::string token, const std::string currency, const u64 amount, const std::list<u64>& paymentMethods) {
 
     const std::string URL = "https://api2.bybit.com/fiat/otc/item/online";
 
@@ -240,7 +244,16 @@ std::array<BybitP2POffer, 10> getP2POffers(const std::string token, const std::s
     CURLcode res;
 
     /* Request params */
-    const char* post_data = "{\"userId\":420450320,\"tokenId\":\"USDT\",\"currencyId\":\"RUB\",\"payment\":[\"75\"],\"side\":\"0\",\"size\":\"10\",\"page\":\"1\",\"amount\":\"20000\",\"vaMaker\":false,\"bulkMaker\":false,\"canTrade\":true,\"verificationFilter\":0,\"sortType\":\"TRADE_PRICE\",\"paymentPeriod\":[],\"itemRegion\":1}";
+    std::string post_data = "{\"userId\":420450320,\"tokenId\":\"USDT\",\"currencyId\":\"RUB\",\"payment\":["; 
+    
+    for (auto& method : paymentMethods) {
+        post_data += "\"" + std::to_string(method) + "\",";
+    }
+    post_data.pop_back();
+
+    post_data += "],\"side\":\"0\",\"size\":\"10\",\"page\":\"1\",\"amount\":\"" + std::to_string(amount) + "\",\"vaMaker\":false,\"bulkMaker\":false,\"canTrade\":true,\"verificationFilter\":0,\"sortType\":\"TRADE_PRICE\",\"paymentPeriod\":[],\"itemRegion\":1}";
+
+    INFO("post_data = %s\n", post_data.c_str());
 
     /* Setup request headers */
     struct curl_slist *headers = NULL;
@@ -293,7 +306,7 @@ std::array<BybitP2POffer, 10> getP2POffers(const std::string token, const std::s
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_COOKIE, cookie);
         curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip, deflate, br, zstd");
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseString);
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_string);

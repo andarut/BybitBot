@@ -40,6 +40,42 @@ const std::list<BybitPaymentMethod> supportedPaymentMethods = {
     {
         .index = 75,
         .text = "Tinkoff"
+    },
+    {
+        .index = 377,
+        .text = "Sberbank"
+    },
+    {
+        .index = 64,
+        .text = "Raiffeisenbank"
+    },
+    {
+        .index = 378,
+        .text = "Gazprombank"
+    },
+    {
+        .index = 379,
+        .text = "Alfa Bank"
+    },
+    {
+        .index = 382,
+        .text = "SBP"
+    },
+    {
+        .index = 381,
+        .text = "VTB Bank"
+    },
+    {
+        .index = 595,
+        .text = "OZON Bank"
+    },
+    {
+        .index = 614,
+        .text = "Sovkombank"
+    },
+    {
+        .index = 90,
+        .text = "Cash in Person"
     }
 };
 
@@ -52,6 +88,6 @@ struct BybitP2POffer {
     std::string link;
 };
 
-std::array<BybitP2POffer, 10> getP2POffers(const std::string token, const std::string currency, const u64 amount);
+std::array<BybitP2POffer, 10> getP2POffers(const std::string token, const std::string currency, const u64 amount, const std::list<u64>& paymentMethods);
 
 #endif // BYBIT_H
