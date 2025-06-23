@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="/docs/bybitbot_logo_dark.png">
-  <img alt="liblena logo" src="/docs/bybitbot_logo_dark.png" width="50%" height="50%">
+  <img alt="bybitbot logo" src="/docs/bybitbot_logo_dark.png" width="50%" height="50%">
 </picture>
 
 for simplified P2P trading on Bybit 
@@ -21,6 +21,17 @@ for simplified P2P trading on Bybit
 This Telegram bot can make your P2P trading life on Bybit easier.
 
 Due to its extreme simplicity, it aims to be the perfect tool for P2P trader.
+
+## Features
+
+### Unified trading balance
+<img alt="balance" src="/docs/balance.png" width="50%" height="50%">
+
+### Select payment methods
+<img alt="payment" src="/docs/payment.png" width="50%" height="50%">
+
+### P2P Offers with your amount and your payment methods
+<img alt="offers" src="/docs/offers.png" width="50%" height="50%">
 
 ## Requirements
 
