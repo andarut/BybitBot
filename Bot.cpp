@@ -69,85 +69,13 @@ void BybitBot::run() {
             }
         }
 
-    
-        std::string data = query->data;
-        if (data == "Balance") {
-            m_deleteMessage(query->message->chat->id, query->message->messageId);
-            sendBalance(query->message->chat->id);   
-        }
-        if (data == "P2P Offers") {
-            m_deleteMessage(query->message->chat->id, query->message->messageId);
-            sendAmountSetup(query->message->chat->id);
-        }
-        // if (data == "Tickers") {
-        //     m_deleteMessage(query->message->chat->id, query->message->messageId);
-        //     sendTickers(query->message->chat->id);
-        // }
-        if (data == "API_KEY setup") {
-            m_deleteMessage(query->message->chat->id, query->message->messageId);
-            sendApiKeySetup(query->message->chat->id);
-        }
-        if (data == "API_SECRET setup") {
-            m_deleteMessage(query->message->chat->id, query->message->messageId);
-            sendApiSecretSetup(query->message->chat->id);
-        }
-        // if (data == "Tokens setup") {
-        //     m_deleteMessage(query->message->chat->id, query->message->messageId);
-        //     sendTokensSetup(query->message->chat->id);
-        // }
-        // if (data == "Currencies setup") {
-        //     m_deleteMessage(query->message->chat->id, query->message->messageId);
-        //     sendCurrenciesSetup(query->message->chat->id);
-        // }
-        if (data == "Payment methods setup") {
-            m_deleteMessage(query->message->chat->id, query->message->messageId);
-            sendPaymentsSetup(query->message->chat->id);
-        }
-        if (data == "Help") {
-            m_deleteMessage(query->message->chat->id, query->message->messageId);
-            sendHelp(query->message->chat->id);
-        }
-
-        if (std::find(m_menu.begin(), m_menu.end(), query->data) != m_menu.end()) return;
-
-        if (m_state[query->message->chat->id] == BybitBotUserState::TOKENS_INPUT) { 
-            INFO("query->data = %s\n", query->data.c_str());
-            std::string data = query->data;
-            if (data == "-1") {
-                m_state[query->message->chat->id] = BybitBotUserState::IDLE;
+        else {
+            try {
+                std::string data = query->data;
                 m_deleteMessage(query->message->chat->id, query->message->messageId);
-                m_sendToUser(query->message->chat->id, "Tokens are set", m_menuKeyboard(query->message->chat->id));
-            } else {
-                if (std::find(m_data[query->message->chat->id].tokens.begin(), m_data[query->message->chat->id].tokens.end(), data) != m_data[query->message->chat->id].tokens.end())
-                    m_data[query->message->chat->id].tokens.remove(data);
-                else
-                    m_data[query->message->chat->id].tokens.push_back(data);
-                m_bot.getApi().editMessageReplyMarkup(
-                    query->message->chat->id,
-                    query->message->messageId,
-                    query->inlineMessageId,
-                    m_tokensKeyboard(query->message->chat->id)
-                );
-            }
-        }
-
-        if (m_state[query->message->chat->id] == BybitBotUserState::CURRENCIES_INPUT) {
-            std::string data = query->data;
-            if (data == "-1") {
-                m_state[query->message->chat->id] = BybitBotUserState::IDLE;
-                m_deleteMessage(query->message->chat->id, query->message->messageId);
-                m_sendToUser(query->message->chat->id, "Currencies are set", m_menuKeyboard(query->message->chat->id));
-            } else {
-                if (std::find(m_data[query->message->chat->id].currencies.begin(), m_data[query->message->chat->id].currencies.end(), data) != m_data[query->message->chat->id].currencies.end())
-                    m_data[query->message->chat->id].currencies.remove(data);
-                else
-                    m_data[query->message->chat->id].currencies.push_back(data);
-                m_bot.getApi().editMessageReplyMarkup(
-                    query->message->chat->id,
-                    query->message->messageId,
-                    query->inlineMessageId,
-                    m_currenciesKeyboard(query->message->chat->id)
-                );
+                m_menu.at(data)(query->message->chat->id);
+            } catch (std::out_of_range &e) {
+                return;
             }
         }
     });
@@ -243,94 +171,16 @@ void BybitBot::sendP2POffers(const s64& chatId, const u64& amount) {
 TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_menuKeyboard(const s64& chatId) {
     TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
 
-    for (auto& menu : m_menu) {
+    for (const auto& [command, callback] : m_menu) {
         std::vector<TgBot::InlineKeyboardButton::Ptr> row;
         TgBot::InlineKeyboardButton::Ptr menuButton(new TgBot::InlineKeyboardButton);
-        menuButton->text = menu;
-        menuButton->callbackData = menu;
+        menuButton->text = command;
+        menuButton->callbackData = command;
         row.push_back(menuButton);
         keyboard->inlineKeyboard.push_back(row);
     }
 
     return keyboard;
-}
-
-TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_tokensKeyboard(const s64& chatId) {
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-
-    auto coinList = getCoinList(m_data[chatId].apiKey, m_data[chatId].apiSecret);
-
-    for (auto& token : coinList) {
-        std::vector<TgBot::InlineKeyboardButton::Ptr> row;
-        TgBot::InlineKeyboardButton::Ptr tokenButton(new TgBot::InlineKeyboardButton);
-        if (std::find(m_data[chatId].tokens.begin(), m_data[chatId].tokens.end(), token) != m_data[chatId].tokens.end())
-            tokenButton->text = std::format("✅ {}", token);
-        else
-            tokenButton->text = std::format("❌ {}", token);
-        tokenButton->callbackData = token;
-        row.push_back(tokenButton);
-        keyboard->inlineKeyboard.push_back(row);
-    }
-
-    std::vector<TgBot::InlineKeyboardButton::Ptr> done_row;
-    TgBot::InlineKeyboardButton::Ptr doneButton(new TgBot::InlineKeyboardButton);
-    doneButton->text = "Done!";
-    doneButton->callbackData = std::to_string(-1);
-    done_row.push_back(doneButton);
-
-    
-    keyboard->inlineKeyboard.push_back(done_row);
-
-    return keyboard;
-}
-
-TgBot::InlineKeyboardMarkup::Ptr BybitBot::m_currenciesKeyboard(const s64& chatId) {
-    TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup);
-
-    std::vector<TgBot::InlineKeyboardButton::Ptr> row0;
-
-    for (auto& currency : currenciesList) {
-        TgBot::InlineKeyboardButton::Ptr currencyButton(new TgBot::InlineKeyboardButton);
-        if (std::find(m_data[chatId].currencies.begin(), m_data[chatId].currencies.end(), currency) != m_data[chatId].currencies.end())
-            currencyButton->text = std::format("✅ {}", currency);
-        else
-            currencyButton->text = std::format("❌ {}", currency);
-        currencyButton->callbackData = currency;
-        row0.push_back(currencyButton);
-    }
-
-    std::vector<TgBot::InlineKeyboardButton::Ptr> done_row;
-    TgBot::InlineKeyboardButton::Ptr doneButton(new TgBot::InlineKeyboardButton);
-    doneButton->text = "Done!";
-    doneButton->callbackData = std::to_string(-1);
-    done_row.push_back(doneButton);
-
-    keyboard->inlineKeyboard.push_back(row0);
-    keyboard->inlineKeyboard.push_back(done_row);
-
-    return keyboard;
-}
-
-void BybitBot::sendTickers(const s64& chatId) {
-    auto& tokens     = m_data[chatId].tokens;
-    auto& currencies = m_data[chatId].currencies;
-    auto& apiKey     = m_data[chatId].apiKey;
-    auto& apiSecret  = m_data[chatId].apiSecret;
-
-    auto& tickers = getTickers(tokens, currencies, apiKey, apiSecret);
-
-    std::string tickers_message = "Tickers\n\n";
-    for (auto& ticker : tickers) {
-        tickers_message += std::format("Symbol = {}\n",  ticker.symbol);
-        tickers_message +=
-            std::format("* Last price = {:.02f}\n", ticker.lastPrice) + \
-            std::format("* Index price = {:.02f}\n", ticker.indexPrice) + \
-            std::format("* Mark price = {:.02f}\n", ticker.markPrice) + \
-            std::format("* Bid1 price = {:.02f}\n", ticker.bid1Price) + \
-            std::format("* Ask1 price = {:.02f}\n", ticker.ask1Price) + "\n\n";
-    }
-
-    m_sendToUser(chatId, tickers_message);
 }
 
 void BybitBot::sendAmountSetup(const s64& chatId) {
@@ -349,18 +199,6 @@ void BybitBot::sendApiSecretSetup(const s64& chatId) {
     const std::string apiSecretSetup = "Send your API_SECRET from Bybit.\nIt will be avaliable with API_KEY.\n";
     m_state[chatId] = BybitBotUserState::API_SECRET_INPUT;
     m_sendToUser(chatId, apiSecretSetup);
-}
-
-void BybitBot::sendTokensSetup(const s64& chatId) {
-    const std::string tokenSetupMessage = "Select your tokens\n";
-    m_state[chatId] = BybitBotUserState::TOKENS_INPUT;
-    m_sendToUser(chatId, tokenSetupMessage, m_tokensKeyboard(chatId));
-}
-
-void BybitBot::sendCurrenciesSetup(const s64& chatId) {
-    const std::string currenciesSetupMessage = "Select your currencies\n";
-    m_state[chatId] = BybitBotUserState::CURRENCIES_INPUT;
-    m_sendToUser(chatId, currenciesSetupMessage, m_currenciesKeyboard(chatId));
 }
 
 void BybitBot::sendUnknownCommand(const s64& chatId) {
@@ -412,9 +250,7 @@ void BybitBot::m_saveData() {
         j[std::to_string(id)] = nlohmann::json{
             {"apiKey", userData.apiKey},
             {"apiSecret", userData.apiSecret},
-            {"paymentMethods", userData.paymentMethods},
-            {"tokens", userData.tokens},
-            {"currencies", userData.currencies}
+            {"paymentMethods", userData.paymentMethods}
         };
     }
     std::ofstream file("m_data.json");
@@ -437,9 +273,7 @@ void BybitBot::m_loadData() {
         m_data[id] = BybitBotUserData({
             value["apiKey"].get<std::string>(),
             value["apiSecret"].get<std::string>(),
-            value["paymentMethods"].get<std::list<u64>>(),
-            value["tokens"].get<std::list<std::string>>(),
-            value["currencies"].get<std::list<std::string>>()
+            value["paymentMethods"].get<std::list<u64>>()
         });
     }
 }

@@ -21,15 +21,10 @@ public:
     void sendHelp(const s64& chatId);
     void sendBalance(const s64& chatId);
     void sendP2POffers(const s64& chatId, const u64& amount);
-    void sendTickers(const s64& chatId);
 
     void sendAmountSetup(const s64& chatId);
     void sendApiKeySetup(const s64& chatId);
     void sendApiSecretSetup(const s64& chatId);
-
-    void sendTokensSetup(const s64& chatId);
-    void sendCurrenciesSetup(const s64& chatId);
-
     void sendPaymentsSetup(const s64& chatId);
 
     void sendUnknownCommand(const s64& chatId);
@@ -47,8 +42,6 @@ private:
 
     TgBot::InlineKeyboardMarkup::Ptr m_menuKeyboard(const s64& chatId);
 
-    TgBot::InlineKeyboardMarkup::Ptr m_tokensKeyboard(const s64& chatId);
-    TgBot::InlineKeyboardMarkup::Ptr m_currenciesKeyboard(const s64& chatId);
 
     // TODO
     // void m_sendToAll(const std::string& message);
@@ -61,8 +54,6 @@ private:
         std::string apiKey="JwmWRC3AeLxMQ5HHN1";
         std::string apiSecret="JcKWltDJjjjf5c4SSLg8ZguAHJyG3FJ7niH4";
         std::list<u64> paymentMethods;
-        std::list<std::string> tokens;
-        std::list<std::string> currencies;
     };
     std::unordered_map<s64, BybitBotUserData> m_data;
 
@@ -77,24 +68,19 @@ private:
         PAYMENTS_INPUT,
         AMOUNT_INPUT,
         TOKENS_INPUT,
-        CURRENCIES_INPUT
     };
     std::unordered_map<s64, BybitBotUserState> m_state;
 
     void m_saveState();
     void m_loadState();
 
-    // TODO: make in map <command> : <handler>
-    const std::list<std::string> m_menu = {
-        "Balance",
-        "P2P Offers",
-        // "Tickers",
-        "API_KEY setup",
-        "API_SECRET setup",
-        // "Tokens setup",
-        // "Currencies setup",
-        "Payment methods setup",
-        "Help"
+    const std::map<std::string, std::function<void(u64)>> m_menu = {
+        {"Balance",               [this](u64 chatId) { sendBalance(chatId); }},
+        {"P2P Offers",            [this](u64 chatId) { sendAmountSetup(chatId); }},
+        {"Payment methods setup", [this](u64 chatId) { sendPaymentsSetup(chatId); }},
+        {"API_KEY setup",         [this](u64 chatId) { sendApiKeySetup(chatId); }},
+        {"API_SECRET setup",      [this](u64 chatId) { sendApiSecretSetup(chatId); }},
+        {"Help",                  [this](u64 chatId) { sendHelp(chatId); }}
     };
 
     /* tgbot objects */
